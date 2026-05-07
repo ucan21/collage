@@ -56,10 +56,10 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   width:100%;border-radius:var(--radius);overflow:hidden;
   display:grid;gap:var(--gap);background:#111;
 }
-/* landscape: 16:9 aspect, doesn't stretch full height */
+/* 상하형: 세로 비율 고정 */
 .canvas-wrap.landscape{align-items:center}
 .canvas-wrap.landscape .collage-canvas{
-  width:100%;aspect-ratio:16/9;height:auto;align-self:center;
+  width:100%;aspect-ratio:9/16;height:auto;align-self:center;
 }
 
 /* ── CELL ── */
@@ -122,8 +122,8 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   display:grid;gap:var(--gap);
   background:#111;
 }
-/* landscape fullscreen */
-.fullscreen.ls .fullscreen-canvas{width:100%;height:auto;aspect-ratio:16/9;align-self:center}
+/* 상하형 fullscreen */
+.fullscreen.ls .fullscreen-canvas{width:60%;height:auto;aspect-ratio:9/16;align-self:center}
 
 .fullscreen-photo{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block}
 .fullscreen-caption{
@@ -192,13 +192,13 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
         <span class="chip-icon">▪▪▪▪▪</span>5장
       </button>
     </div>
-    <div class="mode-label">가로형</div>
+    <div class="mode-label">상하형 (가로)</div>
     <div class="mode-row">
       <button class="mode-chip" data-mode="l2" onclick="setMode('l2')">
-        <span class="chip-icon">━━</span>2장 가로
+        <span class="chip-icon">☰☰</span>2장 상하
       </button>
       <button class="mode-chip" data-mode="l3" onclick="setMode('l3')">
-        <span class="chip-icon">━━━</span>3장 가로
+        <span class="chip-icon">☰☰☰</span>3장 상하
       </button>
       <button class="mode-chip" style="flex:0.5;opacity:0;pointer-events:none"></button>
       <button class="mode-chip" style="flex:0.5;opacity:0;pointer-events:none"></button>
@@ -282,8 +282,8 @@ const MODES = {
   p3: { count:3, landscape:false, grid:{ cols:'1fr 1fr 1fr', rows:'1fr', areas:'' } },
   p4: { count:4, landscape:false, grid:{ cols:'1fr 1fr', rows:'1fr 1fr', areas:'' } },
   p5: { count:5, landscape:false, grid:{ cols:'1fr 1fr 1fr', rows:'1fr 1fr', areas:'"a a b" "c d e"' } },
-  l2: { count:2, landscape:true,  grid:{ cols:'1fr 1fr', rows:'1fr',    areas:'' } },
-  l3: { count:3, landscape:true,  grid:{ cols:'1fr 1fr 1fr', rows:'1fr', areas:'' } },
+  l2: { count:2, landscape:true,  grid:{ cols:'1fr', rows:'1fr 1fr',       areas:'' } },
+  l3: { count:3, landscape:true,  grid:{ cols:'1fr', rows:'1fr 1fr 1fr',   areas:'' } },
 };
 const AREA_NAMES = ['a','b','c','d','e'];
 
@@ -479,9 +479,9 @@ function openFullscreen() {
 
   if (m.landscape) {
     fs.classList.add('ls');
-    fsc.style.width = '100%';
+    fsc.style.width = '60%';
     fsc.style.height = 'auto';
-    fsc.style.aspectRatio = '16/9';
+    fsc.style.aspectRatio = '9/16';
   } else {
     fs.classList.remove('ls');
     fsc.style.width = '100%';
@@ -566,7 +566,7 @@ async function saveCollage() {
 
   // Build a clean offscreen canvas for html2canvas
   const m = MODES[currentMode];
-  const W = 1200, H = m.landscape ? Math.round(W * 9/16) : Math.round(W * 4/3);
+  const W = 1200, H = m.landscape ? Math.round(W * 16/9) : Math.round(W * 4/3);
 
   const offscreen = document.createElement('div');
   offscreen.style.cssText = `position:fixed;left:-9999px;top:0;width:${W}px;height:${H}px;display:grid;gap:2px;background:${canvas.style.background || '#111'};`;
