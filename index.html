@@ -13,6 +13,21 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>📸 사진 콜라주</title>
+<!-- SW 강제 초기화: 구버전 캐시 완전 삭제 -->
+<script>
+(async()=>{
+  if('serviceWorker' in navigator){
+    // 모든 SW 등록 해제
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r=>r.unregister()));
+    // 브라우저 캐시 전부 삭제
+    if(window.caches){
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k=>caches.delete(k)));
+    }
+  }
+})();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -51,7 +66,12 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .mode-chip .chip-icon{display:block;font-size:9px;margin-bottom:1px;opacity:.7}
 
 /* ── CANVAS ── */
-.canvas-wrap{flex:1;padding:0 12px;min-height:0;display:flex;align-items:stretch}
+.canvas-wrap{
+  flex:1;padding:0 12px;min-height:0;
+  display:flex;align-items:stretch;
+  /* toolbar가 항상 보이도록 최대 높이 제한 */
+  max-height:calc(100dvh - 210px);
+}
 .collage-canvas{
   width:100%;border-radius:var(--radius);overflow:hidden;
   display:grid;gap:var(--gap);background:#111;
@@ -60,12 +80,20 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .canvas-wrap.landscape{align-items:center}
 .canvas-wrap.landscape .collage-canvas{
   width:100%;aspect-ratio:9/16;height:auto;align-self:center;
+  max-height:100%;
 }
 
 /* ── CELL ── */
 .cell{position:relative;background:var(--surface2);overflow:hidden;min-height:0;min-width:0}
 .cell-file{position:absolute;width:1px;height:1px;opacity:0;top:0;left:0;pointer-events:none}
-.cell-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
+.cell-label{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:2;
+}
+/* 사진이 있으면 label은 터치 이벤트를 받지 않음 — 핵심 수정 */
+.cell.has-photo .cell-label{
+  pointer-events:none;
+}
 .cell-placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--text2);border:2px dashed rgba(255,255,255,0.12);border-radius:8px;padding:8px;pointer-events:none;transition:all .15s}
 .cell-placeholder svg{width:22px;height:22px;opacity:.5}
 .cell-placeholder span{font-size:9px;font-weight:500}
@@ -76,7 +104,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   position:absolute;inset:0;width:100%;height:100%;
   object-fit:cover;object-position:50% 50%;
   z-index:0;pointer-events:none;
-  transition:object-position 0s; /* instant during drag */
+  transition:object-position 0s;
 }
 .cell.has-photo .cell-placeholder{display:none}
 .cell.has-photo .cell-label{background:transparent}
@@ -338,22 +366,28 @@ function buildGrid() {
       </div>
     `;
     canvas.appendChild(cell);
+    // 사진 있는 셀 탭 → remove 버튼
+    cell.addEventListener('click', () => {
+      if (cell.classList.contains('has-photo')) cellTap(i);
+    });
     attachDragHandlers(cell, i);
   }
 }
 
 // ── FILE HANDLING ──
 function labelClick(e, idx) {
+  // label은 사진 없을 때만 파일 피커 오픈
+  // 사진 있으면 pointer-events:none이라 이 함수 자체가 안 불림
   if (dragMode) { e.preventDefault(); return; }
-  const cell = document.getElementById('cell-' + idx);
-  if (cell.classList.contains('has-photo')) {
-    e.preventDefault();
-    // single tap on photo → show remove btn
-    const rm = document.getElementById('rm-' + idx);
-    const was = rm.classList.contains('show');
-    document.querySelectorAll('.remove-btn').forEach(b => b.classList.remove('show'));
-    if (!was) rm.classList.add('show');
-  }
+}
+
+// 사진 있는 셀 탭 → remove 버튼 토글 (cell 자체에 등록)
+function cellTap(idx) {
+  if (dragMode) return;
+  const rm = document.getElementById('rm-' + idx);
+  const was = rm.classList.contains('show');
+  document.querySelectorAll('.remove-btn').forEach(b => b.classList.remove('show'));
+  if (!was) rm.classList.add('show');
 }
 
 function onFile(e, idx) {
@@ -642,8 +676,9 @@ document.addEventListener('click', e => {
   }
 });
 
+// SW 새로 등록 (캐시 없는 버전)
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js?v=7').catch(()=>{}));
 }
 
 buildGrid();
