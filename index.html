@@ -247,6 +247,89 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* Add photo button in toolbar - highlighted */
+  .tool-btn.add-photo {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+    flex: 1.4;
+  }
+  .tool-btn.add-photo svg { stroke: var(--accent); }
+  .tool-btn.add-photo:active { background: rgba(232,201,109,0.25); }
+
+  /* Photo picker sheet */
+  .picker-sheet {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    border-top: 1px solid var(--border2);
+    padding: 16px 16px max(20px, env(safe-area-inset-bottom));
+    z-index: 150;
+    transform: translateY(100%);
+    transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
+    max-width: 430px; margin: 0 auto;
+  }
+  .picker-sheet.open { transform: translateY(0); }
+  .picker-sheet-title {
+    font-size: 13px; font-weight: 700; color: var(--text2);
+    text-align: center; margin-bottom: 16px;
+    letter-spacing: 0.5px;
+  }
+  .picker-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .picker-slot {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    border: 1.5px dashed var(--border2);
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 4px;
+    cursor: pointer;
+    font-size: 10px; color: var(--text2);
+    transition: all 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .picker-slot.filled { border-style: solid; border-color: var(--accent); }
+  .picker-slot.filled img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .picker-slot svg { width: 18px; height: 18px; opacity: 0.5; }
+  .picker-slot:active { transform: scale(0.93); }
+  .picker-slot .slot-num {
+    font-size: 9px; color: var(--text2); font-weight: 700;
+  }
+  .picker-cancel {
+    width: 100%;
+    background: var(--surface2);
+    border: none; border-radius: 10px;
+    color: var(--text2); font-size: 14px; font-weight: 500;
+    font-family: 'Noto Sans KR', sans-serif;
+    padding: 13px;
+    cursor: pointer;
+    -webkit-appearance: none;
+  }
+  .picker-cancel:active { opacity: 0.7; }
+  .sheet-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 140;
+    display: none;
+  }
+  .sheet-overlay.show { display: block; }
+
+  /* Improved cell placeholder */
+  .cell-placeholder {
+    border: 2px dashed rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 12px;
+  }
+
   /* Caption edit mode hint */
   .edit-hint {
     position: absolute; top: 6px; left: 6px;
@@ -287,17 +370,25 @@
 
   <!-- Toolbar -->
   <div class="toolbar">
+    <button class="tool-btn add-photo" onclick="openPickerSheet()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+        <line x1="12" y1="11" x2="12" y2="15"/><line x1="10" y1="13" x2="14" y2="13"/>
+      </svg>
+      사진 추가
+    </button>
     <button class="tool-btn" onclick="toggleCaptions()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
       </svg>
-      설명 편집
+      설명
     </button>
     <button class="tool-btn" onclick="setBg()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/>
       </svg>
-      배경색
+      배경
     </button>
     <button class="tool-btn danger" onclick="resetAll()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -306,6 +397,16 @@
       초기화
     </button>
   </div>
+</div>
+
+<!-- Sheet overlay -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closePickerSheet()"></div>
+
+<!-- Photo picker sheet -->
+<div class="picker-sheet" id="pickerSheet">
+  <div class="picker-sheet-title">📷 어느 칸에 사진을 추가할까요?</div>
+  <div class="picker-grid" id="pickerGrid"></div>
+  <button class="picker-cancel" onclick="closePickerSheet()">취소</button>
 </div>
 
 <!-- Toast -->
@@ -421,6 +522,45 @@ function removePhoto(idx, e) {
   cell.querySelector('.caption-overlay').classList.remove('visible');
   cell.querySelector('.caption-input').value = '';
   cell.querySelector('.remove-btn').classList.remove('show');
+}
+
+function openPickerSheet() {
+  const grid = document.getElementById('pickerGrid');
+  grid.innerHTML = '';
+  const cells = canvas.querySelectorAll('.cell');
+  cells.forEach((cell, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'picker-slot';
+    const img = cell.querySelector('img');
+    if (img) {
+      slot.classList.add('filled');
+      const thumb = document.createElement('img');
+      thumb.src = img.src;
+      slot.appendChild(thumb);
+    } else {
+      slot.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+          <circle cx="12" cy="13" r="3"/>
+        </svg>
+        <span class="slot-num">${i+1}번</span>`;
+    }
+    slot.onclick = () => { closePickerSheet(); pickPhoto(i); };
+    grid.appendChild(slot);
+  });
+  document.getElementById('pickerSheet').classList.add('open');
+  document.getElementById('sheetOverlay').classList.add('show');
+}
+
+function closePickerSheet() {
+  document.getElementById('pickerSheet').classList.remove('open');
+  document.getElementById('sheetOverlay').classList.remove('show');
+}
+
+function pickPhoto(idx) {
+  pendingIdx = idx;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileInput').click();
 }
 
 function setMode(n) {
