@@ -1,0 +1,41 @@
+{
+  "name": "사진 콜라주 메이커",
+  "short_name": "콜라주",
+  "description": "사진을 2~5장으로 분할하여 콜라주를 만들어보세요",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#0f0f0f",
+  "orientation": "portrait",
+  "lang": "ko",
+  "categories": ["photo", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "2장 콜라주",
+      "short_name": "2장",
+      "description": "2장 분할 콜라주",
+      "url": "./index.html?mode=2"
+    },
+    {
+      "name": "4장 콜라주",
+      "short_name": "4장",
+      "description": "4장 분할 콜라주",
+      "url": "./index.html?mode=4"
+    }
+  ]
+}
