@@ -7,355 +7,133 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="콜라주">
-<meta name="description" content="사진을 분할하여 콜라주를 만드세요">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>📸 사진 콜라주</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0f0f0f;
-    --surface: #1a1a1a;
-    --surface2: #242424;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.15);
-    --text: #f0f0f0;
-    --text2: #888;
-    --accent: #e8c96d;
-    --accent-dim: rgba(232,201,109,0.15);
-    --danger: #e05c5c;
-    --radius: 12px;
-    --gap: 3px;
-  }
+:root{
+  --bg:#0f0f0f;--surface:#1a1a1a;--surface2:#242424;
+  --border2:rgba(255,255,255,0.18);
+  --text:#f0f0f0;--text2:#888;
+  --accent:#e8c96d;--accent-dim:rgba(232,201,109,0.15);
+  --danger:#e05c5c;--radius:12px;--gap:3px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;overflow:hidden}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+.app{display:flex;flex-direction:column;height:100%;height:100dvh;max-width:430px;margin:0 auto}
 
-  html, body {
-    height: 100%; width: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Noto Sans KR', sans-serif;
-    overflow: hidden;
-  }
+.header{padding:50px 20px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.header h1{font-size:20px;font-weight:700;letter-spacing:-.5px}
+.header h1 span{color:var(--accent)}
+.save-btn{background:var(--accent);color:#0f0f0f;border:none;border-radius:20px;padding:8px 18px;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;display:flex;align-items:center;gap:5px;-webkit-appearance:none}
+.save-btn:active{opacity:.8}
+.save-btn svg{width:14px;height:14px}
 
-  .app {
-    display: flex; flex-direction: column;
-    height: 100%; height: 100dvh;
-    max-width: 430px; margin: 0 auto;
-    position: relative;
-  }
+.mode-bar{padding:0 16px 12px;display:flex;gap:8px;flex-shrink:0}
+.mode-chip{flex:1;border:1px solid var(--border2);border-radius:30px;background:var(--surface);color:var(--text2);font-size:13px;font-weight:500;font-family:'Noto Sans KR',sans-serif;padding:9px 4px;cursor:pointer;text-align:center;-webkit-appearance:none;transition:all .15s}
+.mode-chip.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);font-weight:700}
+.mode-chip:active{transform:scale(.95)}
 
-  /* Header */
-  .header {
-    padding: 52px 20px 14px;
-    display: flex; align-items: center; justify-content: space-between;
-    flex-shrink: 0;
-  }
-  .header h1 {
-    font-size: 20px; font-weight: 700;
-    letter-spacing: -0.5px;
-  }
-  .header h1 span { color: var(--accent); }
+.canvas-wrap{flex:1;padding:0 12px;min-height:0;display:flex;align-items:stretch}
+.collage-canvas{width:100%;border-radius:var(--radius);overflow:hidden;display:grid;gap:var(--gap);background:#111}
 
-  .save-btn {
-    background: var(--accent);
-    color: #0f0f0f;
-    border: none; border-radius: 20px;
-    padding: 8px 18px;
-    font-size: 13px; font-weight: 700;
-    font-family: 'Noto Sans KR', sans-serif;
-    cursor: pointer;
-    display: flex; align-items: center; gap: 5px;
-    transition: opacity 0.2s, transform 0.1s;
-    -webkit-appearance: none;
-  }
-  .save-btn:active { opacity: 0.8; transform: scale(0.97); }
-  .save-btn svg { width: 14px; height: 14px; }
+/* ── CELL ── */
+.cell{position:relative;background:var(--surface2);overflow:hidden;min-height:0;min-width:0}
 
-  /* Mode selector */
-  .mode-bar {
-    padding: 0 16px 12px;
-    display: flex; gap: 8px;
-    flex-shrink: 0;
-  }
-  .mode-chip {
-    flex: 1;
-    border: 1px solid var(--border2);
-    border-radius: 30px;
-    background: var(--surface);
-    color: var(--text2);
-    font-size: 13px; font-weight: 500;
-    font-family: 'Noto Sans KR', sans-serif;
-    padding: 9px 4px;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.18s;
-    -webkit-appearance: none;
-  }
-  .mode-chip.active {
-    background: var(--accent-dim);
-    border-color: var(--accent);
-    color: var(--accent);
-    font-weight: 700;
-  }
-  .mode-chip:active { transform: scale(0.95); }
+/*
+  KEY FIX: Each cell has its OWN <input type="file"> with a matching <label>.
+  The label covers the entire cell. No JavaScript .click() is needed.
+  This works on iOS Safari, Android Chrome, and all mobile browsers.
+*/
+.cell-file{
+  position:absolute;
+  width:1px;height:1px;
+  opacity:0;
+  top:0;left:0;
+  /* pointer-events:none so label handles interaction */
+  pointer-events:none;
+}
 
-  /* Canvas area */
-  .canvas-wrap {
-    flex: 1;
-    padding: 0 12px;
-    min-height: 0;
-    display: flex; align-items: stretch;
-  }
+.cell-label{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  z-index:2;
+}
+/* Placeholder visible only when no photo */
+.cell-placeholder{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  color:var(--text2);
+  border:2px dashed rgba(255,255,255,0.12);
+  border-radius:8px;padding:10px;
+  pointer-events:none;
+  transition:all .15s;
+}
+.cell-placeholder svg{width:26px;height:26px;opacity:.5}
+.cell-placeholder span{font-size:10px;font-weight:500}
+.cell-label:active .cell-placeholder{border-color:var(--accent);color:var(--accent)}
 
-  .collage-canvas {
-    width: 100%; border-radius: var(--radius);
-    overflow: hidden;
-    display: grid;
-    gap: var(--gap);
-    background: #111;
-    position: relative;
-  }
+/* Photo sits behind label */
+.cell-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none}
 
-  /* Cell */
-  .cell {
-    position: relative;
-    background: var(--surface2);
-    overflow: hidden;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    min-height: 0; min-width: 0;
-    -webkit-user-select: none; user-select: none;
-  }
+/* Once photo is loaded, hide placeholder, make label transparent */
+.cell.has-photo .cell-placeholder{display:none}
+.cell.has-photo .cell-label{background:transparent}
 
-  .cell img {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    pointer-events: none;
-  }
+/* Remove button — above everything */
+.remove-btn{
+  position:absolute;top:6px;right:6px;
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.3);
+  color:#fff;font-size:15px;line-height:1;
+  cursor:pointer;display:none;align-items:center;justify-content:center;
+  z-index:10;-webkit-appearance:none;
+}
+.remove-btn.show{display:flex}
 
-  .cell-placeholder {
-    display: flex; flex-direction: column;
-    align-items: center; gap: 8px;
-    color: var(--text2);
-    pointer-events: none;
-    transition: color 0.2s;
-  }
-  .cell-placeholder svg { width: 28px; height: 28px; opacity: 0.5; }
-  .cell-placeholder span { font-size: 11px; font-weight: 500; }
+/* Caption */
+.caption-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.75));padding:20px 8px 8px;display:none;z-index:5}
+.caption-overlay.visible{display:block}
+.caption-input{width:100%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:#fff;font-size:12px;font-family:'Noto Sans KR',sans-serif;padding:5px 8px;outline:none;-webkit-appearance:none}
+.caption-input::placeholder{color:rgba(255,255,255,.45)}
 
-  .cell:active .cell-placeholder { color: var(--accent); }
+.caption-badge{position:absolute;top:5px;left:5px;background:rgba(232,201,109,.9);color:#0f0f0f;font-size:9px;font-weight:700;padding:2px 5px;border-radius:6px;display:none;z-index:6}
+.caption-badge.show{display:block}
 
-  /* Caption overlay */
-  .caption-overlay {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    background: linear-gradient(transparent, rgba(0,0,0,0.72));
-    padding: 20px 8px 8px;
-    display: none;
-    z-index: 2;
-  }
-  .caption-overlay.visible { display: block; }
+/* Toolbar */
+.toolbar{padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));display:flex;gap:8px;flex-shrink:0}
+.tool-btn{flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:10px;color:var(--text2);font-size:11px;font-weight:500;font-family:'Noto Sans KR',sans-serif;padding:10px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;-webkit-appearance:none;transition:all .15s}
+.tool-btn svg{width:20px;height:20px}
+.tool-btn:active{background:var(--surface2);transform:scale(.95)}
+.tool-btn.danger{color:var(--danger);border-color:rgba(224,92,92,.3)}
 
-  .caption-input {
-    width: 100%;
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 6px;
-    color: #fff;
-    font-size: 12px;
-    font-family: 'Noto Sans KR', sans-serif;
-    padding: 5px 8px;
-    outline: none;
-    -webkit-appearance: none;
-  }
-  .caption-input::placeholder { color: rgba(255,255,255,0.45); }
+.toast{position:fixed;bottom:85px;left:50%;transform:translateX(-50%);background:rgba(232,201,109,.95);color:#0f0f0f;font-size:13px;font-weight:700;padding:10px 20px;border-radius:30px;opacity:0;pointer-events:none;transition:opacity .3s;white-space:nowrap;z-index:100}
+.toast.show{opacity:1}
 
-  /* Remove button */
-  .remove-btn {
-    position: absolute; top: 6px; right: 6px;
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.65);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: #fff; font-size: 14px; line-height: 1;
-    cursor: pointer; display: none;
-    align-items: center; justify-content: center;
-    z-index: 3;
-    -webkit-appearance: none;
-  }
-  .remove-btn.show { display: flex; }
-
-  /* Bottom toolbar */
-  .toolbar {
-    padding: 12px 16px;
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
-    display: flex; gap: 10px;
-    flex-shrink: 0;
-  }
-
-  .tool-btn {
-    flex: 1;
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: 10px;
-    color: var(--text2);
-    font-size: 12px; font-weight: 500;
-    font-family: 'Noto Sans KR', sans-serif;
-    padding: 10px 6px;
-    cursor: pointer;
-    display: flex; flex-direction: column;
-    align-items: center; gap: 4px;
-    -webkit-appearance: none;
-    transition: all 0.15s;
-  }
-  .tool-btn svg { width: 20px; height: 20px; }
-  .tool-btn:active { background: var(--surface2); transform: scale(0.96); }
-  .tool-btn.danger { color: var(--danger); border-color: rgba(224,92,92,0.3); }
-
-  /* Toast */
-  .toast {
-    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-    background: rgba(232,201,109,0.95);
-    color: #0f0f0f;
-    font-size: 13px; font-weight: 700;
-    padding: 10px 20px; border-radius: 30px;
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.3s;
-    white-space: nowrap;
-    z-index: 100;
-  }
-  .toast.show { opacity: 1; }
-
-  /* Saving overlay */
-  .saving-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7);
-    display: none; align-items: center; justify-content: center;
-    flex-direction: column; gap: 14px;
-    z-index: 200;
-  }
-  .saving-overlay.show { display: flex; }
-  .saving-overlay p { color: var(--accent); font-size: 15px; font-weight: 500; }
-  .spinner {
-    width: 40px; height: 40px;
-    border: 3px solid var(--accent-dim);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Add photo button in toolbar - highlighted */
-  .tool-btn.add-photo {
-    background: var(--accent-dim);
-    border-color: var(--accent);
-    color: var(--accent);
-    flex: 1.4;
-  }
-  .tool-btn.add-photo svg { stroke: var(--accent); }
-  .tool-btn.add-photo:active { background: rgba(232,201,109,0.25); }
-
-  /* Photo picker sheet */
-  .picker-sheet {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--surface);
-    border-radius: 20px 20px 0 0;
-    border-top: 1px solid var(--border2);
-    padding: 16px 16px max(20px, env(safe-area-inset-bottom));
-    z-index: 150;
-    transform: translateY(100%);
-    transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
-    max-width: 430px; margin: 0 auto;
-  }
-  .picker-sheet.open { transform: translateY(0); }
-  .picker-sheet-title {
-    font-size: 13px; font-weight: 700; color: var(--text2);
-    text-align: center; margin-bottom: 16px;
-    letter-spacing: 0.5px;
-  }
-  .picker-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-  .picker-slot {
-    aspect-ratio: 1;
-    border-radius: 10px;
-    border: 1.5px dashed var(--border2);
-    background: var(--surface2);
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column; gap: 4px;
-    cursor: pointer;
-    font-size: 10px; color: var(--text2);
-    transition: all 0.15s;
-    position: relative; overflow: hidden;
-  }
-  .picker-slot.filled { border-style: solid; border-color: var(--accent); }
-  .picker-slot.filled img {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-  }
-  .picker-slot svg { width: 18px; height: 18px; opacity: 0.5; }
-  .picker-slot:active { transform: scale(0.93); }
-  .picker-slot .slot-num {
-    font-size: 9px; color: var(--text2); font-weight: 700;
-  }
-  .picker-cancel {
-    width: 100%;
-    background: var(--surface2);
-    border: none; border-radius: 10px;
-    color: var(--text2); font-size: 14px; font-weight: 500;
-    font-family: 'Noto Sans KR', sans-serif;
-    padding: 13px;
-    cursor: pointer;
-    -webkit-appearance: none;
-  }
-  .picker-cancel:active { opacity: 0.7; }
-  .sheet-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 140;
-    display: none;
-  }
-  .sheet-overlay.show { display: block; }
-
-  /* Improved cell placeholder */
-  .cell-placeholder {
-    border: 2px dashed rgba(255,255,255,0.15);
-    border-radius: 8px;
-    padding: 12px;
-  }
-
-  /* Caption edit mode hint */
-  .edit-hint {
-    position: absolute; top: 6px; left: 6px;
-    background: rgba(232,201,109,0.9);
-    color: #0f0f0f; font-size: 9px; font-weight: 700;
-    padding: 2px 6px; border-radius: 8px;
-    display: none; z-index: 3;
-  }
-  .edit-hint.show { display: block; }
+.saving-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:200}
+.saving-overlay.show{display:flex}
+.saving-overlay p{color:var(--accent);font-size:15px;font-weight:500}
+.spinner{width:40px;height:40px;border:3px solid var(--accent-dim);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- Header -->
   <div class="header">
     <h1>📸 사진 <span>콜라주</span></h1>
     <button class="save-btn" onclick="saveCollage()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
       </svg>
       저장
     </button>
   </div>
 
-  <!-- Mode chips -->
   <div class="mode-bar">
     <button class="mode-chip active" data-n="2" onclick="setMode(2)">2장</button>
     <button class="mode-chip" data-n="3" onclick="setMode(3)">3장</button>
@@ -363,237 +141,184 @@
     <button class="mode-chip" data-n="5" onclick="setMode(5)">5장</button>
   </div>
 
-  <!-- Collage canvas -->
   <div class="canvas-wrap">
     <div class="collage-canvas" id="canvas"></div>
   </div>
 
-  <!-- Toolbar -->
   <div class="toolbar">
-    <button class="tool-btn add-photo" onclick="openPickerSheet()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-        <circle cx="12" cy="13" r="4"/>
-        <line x1="12" y1="11" x2="12" y2="15"/><line x1="10" y1="13" x2="14" y2="13"/>
-      </svg>
-      사진 추가
-    </button>
     <button class="tool-btn" onclick="toggleCaptions()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
       </svg>
-      설명
+      설명 편집
     </button>
     <button class="tool-btn" onclick="setBg()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/>
+        <circle cx="12" cy="12" r="10"/>
+        <circle cx="12" cy="12" r="4"/>
       </svg>
-      배경
+      배경색
     </button>
     <button class="tool-btn danger" onclick="resetAll()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+        <polyline points="1 4 1 10 7 10"/>
+        <path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
       </svg>
       초기화
     </button>
   </div>
 </div>
 
-<!-- Sheet overlay -->
-<div class="sheet-overlay" id="sheetOverlay" onclick="closePickerSheet()"></div>
-
-<!-- Photo picker sheet -->
-<div class="picker-sheet" id="pickerSheet">
-  <div class="picker-sheet-title">📷 어느 칸에 사진을 추가할까요?</div>
-  <div class="picker-grid" id="pickerGrid"></div>
-  <button class="picker-cancel" onclick="closePickerSheet()">취소</button>
-</div>
-
-<!-- Toast -->
 <div class="toast" id="toast"></div>
-
-<!-- Saving overlay -->
 <div class="saving-overlay" id="savingOverlay">
   <div class="spinner"></div>
-  <p>이미지 저장 중...</p>
+  <p>저장 중...</p>
 </div>
 
-<!-- Hidden file input -->
-<input type="file" id="fileInput" accept="image/*" style="display:none" onchange="onFile(event)">
-
-<!-- html2canvas -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
 <script>
 let mode = 2;
-let pendingIdx = -1;
 let captionMode = false;
-let bgColors = ['#111111','#ffffff','#1a1a2e','#2d1b1b','#1b2d1b'];
 let bgIdx = 0;
-
+const bgColors = ['#111111','#ffffff','#1a1a2e','#2d1b1b','#1b2d1b'];
+const bgLabels = ['검정','흰색','다크블루','다크레드','다크그린'];
+const areaNames = ['a','b','c','d','e'];
 const canvas = document.getElementById('canvas');
 
-const gridStyles = {
-  2: () => { canvas.style.gridTemplateColumns='1fr 1fr'; canvas.style.gridTemplateRows='1fr'; canvas.style.gridTemplateAreas=''; },
-  3: () => { canvas.style.gridTemplateColumns='1fr 1fr 1fr'; canvas.style.gridTemplateRows='1fr'; canvas.style.gridTemplateAreas=''; },
-  4: () => { canvas.style.gridTemplateColumns='1fr 1fr'; canvas.style.gridTemplateRows='1fr 1fr'; canvas.style.gridTemplateAreas=''; },
-  5: () => {
-    canvas.style.gridTemplateColumns='1fr 1fr 1fr';
-    canvas.style.gridTemplateRows='1fr 1fr';
-    canvas.style.gridTemplateAreas='"a a b" "c d e"';
-  }
-};
-
-const areaNames = ['a','b','c','d','e'];
+function applyGrid() {
+  const s = canvas.style;
+  if (mode===2){ s.gridTemplateColumns='1fr 1fr'; s.gridTemplateRows='1fr'; s.gridTemplateAreas=''; }
+  else if(mode===3){ s.gridTemplateColumns='1fr 1fr 1fr'; s.gridTemplateRows='1fr'; s.gridTemplateAreas=''; }
+  else if(mode===4){ s.gridTemplateColumns='1fr 1fr'; s.gridTemplateRows='1fr 1fr'; s.gridTemplateAreas=''; }
+  else if(mode===5){ s.gridTemplateColumns='1fr 1fr 1fr'; s.gridTemplateRows='1fr 1fr'; s.gridTemplateAreas='"a a b" "c d e"'; }
+}
 
 function buildGrid() {
   canvas.innerHTML = '';
-  gridStyles[mode]();
+  applyGrid();
 
   for (let i = 0; i < mode; i++) {
     const cell = document.createElement('div');
     cell.className = 'cell';
-    cell.dataset.idx = i;
+    cell.id = 'cell-' + i;
     if (mode === 5) cell.style.gridArea = areaNames[i];
 
+    // Each cell gets its own file input + label pair
+    // label[for=inputId] → clicking label opens file picker directly (no JS needed)
+    const fid = 'fi-' + i;
     cell.innerHTML = `
-      <div class="cell-placeholder">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-          <circle cx="12" cy="13" r="4"/>
-        </svg>
-        <span>탭하여 추가</span>
-      </div>
-      <button class="remove-btn" onclick="removePhoto(${i},event)">✕</button>
-      <div class="edit-hint">편집중</div>
-      <div class="caption-overlay">
-        <input class="caption-input" type="text" placeholder="설명을 입력하세요..." enterkeyhint="done" onkeydown="if(event.key==='Enter')this.blur()">
+      <input class="cell-file" type="file" accept="image/*" id="${fid}" onchange="onFile(event,${i})">
+      <label class="cell-label" for="${fid}" onclick="labelClick(event,${i})">
+        <div class="cell-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          <span>탭하여 추가</span>
+        </div>
+      </label>
+      <button class="remove-btn" id="rm-${i}" onclick="removePhoto(${i},event)">✕</button>
+      <div class="caption-badge" id="badge-${i}">편집중</div>
+      <div class="caption-overlay" id="cap-${i}">
+        <input class="caption-input" type="text" placeholder="설명을 입력하세요..."
+          enterkeyhint="done"
+          onkeydown="if(event.key==='Enter')this.blur()"
+          onclick="event.stopPropagation()">
       </div>
     `;
-    cell.addEventListener('click', () => cellClick(i, cell));
     canvas.appendChild(cell);
   }
 }
 
-function cellClick(idx, cell) {
-  if (captionMode) {
-    const inp = cell.querySelector('.caption-input');
-    if (inp) { inp.focus(); return; }
-  }
-  const img = cell.querySelector('img');
-  if (img) {
+// labelClick: if cell already has photo, show remove btn instead of opening picker
+function labelClick(e, idx) {
+  const cell = document.getElementById('cell-' + idx);
+  if (cell.classList.contains('has-photo')) {
+    e.preventDefault(); // prevent file picker from opening
     // toggle remove button
-    const rb = cell.querySelector('.remove-btn');
-    const showing = rb.classList.contains('show');
+    const rm = document.getElementById('rm-' + idx);
+    const wasShowing = rm.classList.contains('show');
     document.querySelectorAll('.remove-btn').forEach(b => b.classList.remove('show'));
-    if (!showing) rb.classList.add('show');
-  } else {
-    pendingIdx = idx;
-    document.getElementById('fileInput').value = '';
-    document.getElementById('fileInput').click();
+    if (!wasShowing) rm.classList.add('show');
   }
+  // else: has no photo → let label open the file picker naturally
 }
 
-function onFile(e) {
+function onFile(e, idx) {
   const file = e.target.files[0];
-  if (!file || pendingIdx < 0) return;
+  if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    const cell = canvas.querySelectorAll('.cell')[pendingIdx];
-    const ph = cell.querySelector('.cell-placeholder');
-    let img = cell.querySelector('img');
-    if (!img) { img = document.createElement('img'); cell.insertBefore(img, ph); }
+    const cell = document.getElementById('cell-' + idx);
+    // Remove old photo
+    const old = cell.querySelector('.cell-photo');
+    if (old) old.remove();
+    // Insert new photo
+    const img = document.createElement('img');
+    img.className = 'cell-photo';
     img.src = ev.target.result;
-    ph.style.display = 'none';
-    const cap = cell.querySelector('.caption-overlay');
-    if (captionMode) cap.classList.add('visible');
-    cell.querySelector('.remove-btn').classList.remove('show');
+    cell.insertBefore(img, cell.firstChild);
+    cell.classList.add('has-photo');
+    // Caption
+    if (captionMode) {
+      document.getElementById('cap-' + idx).classList.add('visible');
+      document.getElementById('badge-' + idx).classList.add('show');
+    }
+    e.target.value = ''; // allow re-selecting same photo
   };
   reader.readAsDataURL(file);
-  pendingIdx = -1;
 }
 
 function removePhoto(idx, e) {
+  e.preventDefault();
   e.stopPropagation();
-  const cell = canvas.querySelectorAll('.cell')[idx];
-  const img = cell.querySelector('img');
+  const cell = document.getElementById('cell-' + idx);
+  const img = cell.querySelector('.cell-photo');
   if (img) img.remove();
-  cell.querySelector('.cell-placeholder').style.display = '';
-  cell.querySelector('.caption-overlay').classList.remove('visible');
-  cell.querySelector('.caption-input').value = '';
-  cell.querySelector('.remove-btn').classList.remove('show');
+  cell.classList.remove('has-photo');
+  document.getElementById('cap-' + idx).classList.remove('visible');
+  document.getElementById('cap-' + idx).querySelector('input').value = '';
+  document.getElementById('badge-' + idx).classList.remove('show');
+  document.getElementById('rm-' + idx).classList.remove('show');
 }
 
-function openPickerSheet() {
-  const grid = document.getElementById('pickerGrid');
-  grid.innerHTML = '';
-  const cells = canvas.querySelectorAll('.cell');
-  cells.forEach((cell, i) => {
-    const slot = document.createElement('div');
-    slot.className = 'picker-slot';
-    const img = cell.querySelector('img');
-    if (img) {
-      slot.classList.add('filled');
-      const thumb = document.createElement('img');
-      thumb.src = img.src;
-      slot.appendChild(thumb);
-    } else {
-      slot.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-          <circle cx="12" cy="13" r="3"/>
-        </svg>
-        <span class="slot-num">${i+1}번</span>`;
-    }
-    slot.onclick = () => { closePickerSheet(); pickPhoto(i); };
-    grid.appendChild(slot);
-  });
-  document.getElementById('pickerSheet').classList.add('open');
-  document.getElementById('sheetOverlay').classList.add('show');
-}
-
-function closePickerSheet() {
-  document.getElementById('pickerSheet').classList.remove('open');
-  document.getElementById('sheetOverlay').classList.remove('show');
-}
-
-function pickPhoto(idx) {
-  pendingIdx = idx;
-  document.getElementById('fileInput').value = '';
-  document.getElementById('fileInput').click();
-}
+// Hide remove buttons when tapping outside cells
+document.addEventListener('click', e => {
+  if (!e.target.closest('.cell')) {
+    document.querySelectorAll('.remove-btn').forEach(b => b.classList.remove('show'));
+  }
+});
 
 function setMode(n) {
   mode = n;
+  captionMode = false;
   document.querySelectorAll('.mode-chip').forEach(c => c.classList.toggle('active', parseInt(c.dataset.n) === n));
   buildGrid();
-  captionMode = false;
 }
 
 function toggleCaptions() {
   captionMode = !captionMode;
-  canvas.querySelectorAll('.cell').forEach(cell => {
-    const hasImg = !!cell.querySelector('img');
-    const cap = cell.querySelector('.caption-overlay');
-    const hint = cell.querySelector('.edit-hint');
-    if (hasImg) {
-      cap.classList.toggle('visible', captionMode);
-      hint.classList.toggle('show', captionMode);
-    }
-  });
+  for (let i = 0; i < mode; i++) {
+    const cell = document.getElementById('cell-' + i);
+    if (!cell.classList.contains('has-photo')) continue;
+    document.getElementById('cap-' + i).classList.toggle('visible', captionMode);
+    document.getElementById('badge-' + i).classList.toggle('show', captionMode);
+  }
   showToast(captionMode ? '✏️ 설명 편집 모드' : '✅ 편집 완료');
 }
 
 function setBg() {
   bgIdx = (bgIdx + 1) % bgColors.length;
   canvas.style.background = bgColors[bgIdx];
-  const labels = ['검정','흰색','다크블루','다크레드','다크그린'];
-  showToast('배경: ' + labels[bgIdx]);
+  showToast('배경: ' + bgLabels[bgIdx]);
 }
 
 function resetAll() {
   if (!confirm('모든 사진을 초기화할까요?')) return;
   captionMode = false;
+  bgIdx = 0;
+  canvas.style.background = '';
   buildGrid();
   showToast('🔄 초기화 완료');
 }
@@ -602,21 +327,18 @@ function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
 async function saveCollage() {
-  const hasPic = !!canvas.querySelector('img');
-  if (!hasPic) { showToast('⚠️ 먼저 사진을 추가하세요'); return; }
-
-  // Hide remove buttons before capture
-  document.querySelectorAll('.remove-btn').forEach(b => b.classList.remove('show'));
-  document.querySelectorAll('.edit-hint').forEach(h => h.classList.remove('show'));
-
+  if (!canvas.querySelector('.cell-photo')) {
+    showToast('⚠️ 먼저 사진을 추가하세요'); return;
+  }
+  // Hide UI before capture
+  document.querySelectorAll('.remove-btn,.caption-badge,.cell-label').forEach(el => el.style.visibility='hidden');
   document.getElementById('savingOverlay').classList.add('show');
-
-  await new Promise(r => setTimeout(r, 100));
+  await new Promise(r => setTimeout(r, 120));
 
   try {
     const cvs = await html2canvas(canvas, {
@@ -624,40 +346,27 @@ async function saveCollage() {
       backgroundColor: canvas.style.background || '#111111',
       logging: false
     });
-
     const blob = await new Promise(r => cvs.toBlob(r, 'image/jpeg', 0.95));
-    const url = URL.createObjectURL(blob);
-
-    // Try native share first (mobile)
-    if (navigator.share && navigator.canShare({ files: [new File([blob], 'collage.jpg', {type:'image/jpeg'})] })) {
-      await navigator.share({
-        files: [new File([blob], 'collage.jpg', {type:'image/jpeg'})],
-        title: '사진 콜라주'
-      });
+    const file = new File([blob], 'collage.jpg', {type:'image/jpeg'});
+    if (navigator.share && navigator.canShare({files:[file]})) {
+      await navigator.share({files:[file], title:'사진 콜라주'});
     } else {
       const a = document.createElement('a');
-      a.href = url; a.download = 'collage.jpg'; a.click();
+      a.href = URL.createObjectURL(blob);
+      a.download = 'collage.jpg';
+      a.click();
     }
     showToast('🎉 저장 완료!');
   } catch(err) {
     if (err.name !== 'AbortError') showToast('저장 실패. 다시 시도하세요.');
   } finally {
     document.getElementById('savingOverlay').classList.remove('show');
+    document.querySelectorAll('.remove-btn,.caption-badge,.cell-label').forEach(el => el.style.visibility='');
   }
 }
 
-// Hide remove btns on outside click
-document.addEventListener('click', e => {
-  if (!e.target.closest('.cell')) {
-    document.querySelectorAll('.remove-btn').forEach(b => b.classList.remove('show'));
-  }
-});
-
-// Service worker registration
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  });
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
 }
 
 buildGrid();
