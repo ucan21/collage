@@ -243,6 +243,9 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   <div class="mode-section">
     <div class="mode-label">세로형</div>
     <div class="mode-row" id="portraitRow">
+      <button class="mode-chip" data-mode="p1" onclick="setMode('p1')">
+        <span class="chip-icon">▮</span>1장
+      </button>
       <button class="mode-chip active" data-mode="p2" onclick="setMode('p2')">
         <span class="chip-icon">▮▮</span>2장
       </button>
@@ -432,6 +435,7 @@ const canvasWrap = document.getElementById('canvasWrap');
 
 // ── MODE DEFINITIONS ──
 const MODES = {
+  p1: { count:1, landscape:false, grid:{ cols:'1fr', rows:'1fr', areas:'' } },
   p2: { count:2, landscape:false, grid:{ cols:'1fr 1fr', rows:'1fr',    areas:'' } },
   p3: { count:3, landscape:false, grid:{ cols:'1fr 1fr 1fr', rows:'1fr', areas:'' } },
   p4: { count:4, landscape:false, grid:{ cols:'1fr 1fr', rows:'1fr 1fr', areas:'' } },
