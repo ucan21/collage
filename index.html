@@ -65,16 +65,52 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .mode-chip:active{transform:scale(.94)}
 .mode-chip .chip-icon{display:block;font-size:9px;margin-bottom:1px;opacity:.7}
 
-/* ── CANVAS ── */
+/* ── FRAME PANEL ── */
+.frame-panel{
+  padding:0 14px 8px;flex-shrink:0;
+  display:flex;flex-direction:column;gap:8px;
+}
+.frame-row{display:flex;align-items:center;gap:10px}
+.frame-label{font-size:10px;font-weight:700;color:var(--text2);letter-spacing:.5px;min-width:38px}
+.thickness-slider{
+  flex:1;-webkit-appearance:none;appearance:none;
+  height:4px;border-radius:2px;background:var(--border2);outline:none;cursor:pointer;
+}
+.thickness-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+  background:var(--accent);cursor:pointer;box-shadow:0 0 4px rgba(0,0,0,.4);
+}
+.thickness-val{
+  font-size:11px;font-weight:700;color:var(--accent);
+  min-width:26px;text-align:right;
+}
+.shape-row{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
+.shape-btn{
+  flex-shrink:0;
+  width:44px;height:36px;
+  border:1.5px solid var(--border2);border-radius:8px;
+  background:var(--surface);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-appearance:none;transition:all .15s;
+  padding:0;
+}
+.shape-btn.active{border-color:var(--accent);background:var(--accent-dim);}
+.shape-btn:active{transform:scale(.92);}
+.shape-btn svg{width:28px;height:22px;display:block;}
+
+
 .canvas-wrap{
   flex:1;padding:0 12px;min-height:0;
   display:flex;align-items:stretch;
-  /* toolbar가 항상 보이도록 최대 높이 제한 */
-  max-height:calc(100dvh - 210px);
+  max-height:calc(100dvh - 260px);
 }
 .collage-canvas{
-  width:100%;border-radius:var(--radius);overflow:hidden;
-  display:grid;gap:var(--gap);background:#111;
+  width:100%;overflow:hidden;
+  display:grid;
+  gap:var(--frame-gap,3px);
+  background:var(--frame-color,#ffffff);
+  border-radius:var(--frame-outer-radius,12px);
+  padding:var(--frame-padding,0px);
 }
 /* 상하형: 세로 비율 고정 */
 .canvas-wrap.landscape{align-items:center}
@@ -84,7 +120,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 }
 
 /* ── CELL ── */
-.cell{position:relative;background:var(--surface2);overflow:hidden;min-height:0;min-width:0}
+.cell{position:relative;background:var(--surface2);overflow:hidden;min-height:0;min-width:0;border-radius:var(--frame-cell-radius,0px)}
 .cell-file{position:absolute;width:1px;height:1px;opacity:0;top:0;left:0;pointer-events:none}
 .cell-label{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
@@ -233,6 +269,51 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
     </div>
   </div>
 
+  <!-- Frame control panel -->
+  <div class="frame-panel">
+    <div class="frame-row">
+      <span class="frame-label">두께</span>
+      <input class="thickness-slider" type="range" min="0" max="20" value="3" id="thickSlider" oninput="setThickness(this.value)">
+      <span class="thickness-val" id="thickVal">3</span>
+    </div>
+    <div class="frame-row">
+      <span class="frame-label">모양</span>
+      <div class="shape-row" id="shapeRow">
+        <!-- 직선(기본) -->
+        <button class="shape-btn active" data-shape="sharp" onclick="setShape('sharp')" title="직선">
+          <svg viewBox="0 0 28 22" fill="none"><rect x="1" y="1" width="11" height="20" fill="#888" rx="0"/><rect x="16" y="1" width="11" height="20" fill="#888" rx="0"/></svg>
+        </button>
+        <!-- 약한 라운드 -->
+        <button class="shape-btn" data-shape="soft" onclick="setShape('soft')" title="부드러운">
+          <svg viewBox="0 0 28 22" fill="none"><rect x="1" y="1" width="11" height="20" fill="#888" rx="3"/><rect x="16" y="1" width="11" height="20" fill="#888" rx="3"/></svg>
+        </button>
+        <!-- 강한 라운드 -->
+        <button class="shape-btn" data-shape="round" onclick="setShape('round')" title="라운드">
+          <svg viewBox="0 0 28 22" fill="none"><rect x="1" y="1" width="11" height="20" fill="#888" rx="6"/><rect x="16" y="1" width="11" height="20" fill="#888" rx="6"/></svg>
+        </button>
+        <!-- 원형 -->
+        <button class="shape-btn" data-shape="circle" onclick="setShape('circle')" title="원형">
+          <svg viewBox="0 0 28 22" fill="none"><ellipse cx="7" cy="11" rx="6" ry="9" fill="#888"/><ellipse cx="21" cy="11" rx="6" ry="9" fill="#888"/></svg>
+        </button>
+        <!-- 다이아몬드(클리핑) -->
+        <button class="shape-btn" data-shape="diamond" onclick="setShape('diamond')" title="다이아몬드">
+          <svg viewBox="0 0 28 22" fill="none"><polygon points="6,1 11,11 6,21 1,11" fill="#888"/><polygon points="22,1 27,11 22,21 17,11" fill="#888"/></svg>
+        </button>
+        <!-- 별(부드러운 별) -->
+        <button class="shape-btn" data-shape="star" onclick="setShape('star')" title="별모양 틀">
+          <svg viewBox="0 0 28 22" fill="none">
+            <polygon points="6,1 7.5,7 13,7 8.5,11 10.5,17 6,13.5 1.5,17 3.5,11 -1,7 4.5,7" fill="#888"/>
+            <polygon points="22,1 23.5,7 29,7 24.5,11 26.5,17 22,13.5 17.5,17 19.5,11 15,7 20.5,7" fill="#888"/>
+          </svg>
+        </button>
+        <!-- 육각형 -->
+        <button class="shape-btn" data-shape="hex" onclick="setShape('hex')" title="육각형">
+          <svg viewBox="0 0 28 22" fill="none"><polygon points="6,1 11,4 11,18 6,21 1,18 1,4" fill="#888"/><polygon points="22,1 27,4 27,18 22,21 17,18 17,4" fill="#888"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="canvas-wrap" id="canvasWrap">
     <div class="collage-canvas" id="canvas"></div>
   </div>
@@ -297,6 +378,51 @@ let dragMode = false;
 let bgIdx = 0;
 const bgColors = ['#111111','#ffffff','#1a1a2e','#2d1b1b','#1b2d1b'];
 const bgLabels = ['검정','흰색','다크블루','다크레드','다크그린'];
+
+// ── FRAME STATE ──
+let frameThickness = 3;
+let frameShape = 'sharp';
+
+// Shape definitions: outer-radius, cell-radius, padding, clip-path for cell
+const SHAPES = {
+  sharp:   { outerR:'12px', cellR:'0px',  pad:'0px',  clip:'' },
+  soft:    { outerR:'14px', cellR:'6px',  pad:'0px',  clip:'' },
+  round:   { outerR:'20px', cellR:'14px', pad:'0px',  clip:'' },
+  circle:  { outerR:'24px', cellR:'50%',  pad:'0px',  clip:'' },
+  diamond: { outerR:'4px',  cellR:'0px',  pad:'0px',  clip:'polygon(50% 0%,100% 50%,50% 100%,0% 50%)' },
+  star:    { outerR:'4px',  cellR:'0px',  pad:'0px',  clip:'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)' },
+  hex:     { outerR:'4px',  cellR:'0px',  pad:'0px',  clip:'polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)' },
+};
+
+function applyFrame() {
+  const s = SHAPES[frameShape];
+  const gap = frameThickness + 'px';
+  const pad = frameThickness > 0 ? frameThickness + 'px' : '0px';
+  const c = canvas;
+  c.style.setProperty('--frame-gap', gap);
+  c.style.setProperty('--frame-color', '#ffffff');
+  c.style.setProperty('--frame-outer-radius', s.outerR);
+  c.style.setProperty('--frame-padding', pad);
+  c.style.setProperty('--frame-cell-radius', s.cellR);
+
+  // Apply clip-path to all cells
+  canvas.querySelectorAll('.cell').forEach(cell => {
+    cell.style.clipPath = s.clip || '';
+    cell.style.borderRadius = s.cellR;
+  });
+}
+
+function setThickness(val) {
+  frameThickness = parseInt(val);
+  document.getElementById('thickVal').textContent = val;
+  applyFrame();
+}
+
+function setShape(shape) {
+  frameShape = shape;
+  document.querySelectorAll('.shape-btn').forEach(b => b.classList.toggle('active', b.dataset.shape === shape));
+  applyFrame();
+}
 
 // Photo state: {src, posX(%), posY(%)}
 let photos = {}; // key: idx
@@ -372,6 +498,8 @@ function buildGrid() {
     });
     attachDragHandlers(cell, i);
   }
+  // 액자 스타일 적용
+  applyFrame();
 }
 
 // ── FILE HANDLING ──
@@ -588,6 +716,10 @@ function setBg() {
 function resetAll() {
   if (!confirm('모든 사진을 초기화할까요?')) return;
   captionMode = false; dragMode = false; bgIdx = 0;
+  frameThickness = 3; frameShape = 'sharp';
+  document.getElementById('thickSlider').value = 3;
+  document.getElementById('thickVal').textContent = '3';
+  document.querySelectorAll('.shape-btn').forEach(b => b.classList.toggle('active', b.dataset.shape === 'sharp'));
   canvas.style.background = '';
   document.getElementById('btnDrag').classList.remove('active-mode');
   buildGrid();
@@ -603,14 +735,17 @@ async function saveCollage() {
   const W = 1200, H = m.landscape ? Math.round(W * 16/9) : Math.round(W * 4/3);
 
   const offscreen = document.createElement('div');
-  offscreen.style.cssText = `position:fixed;left:-9999px;top:0;width:${W}px;height:${H}px;display:grid;gap:2px;background:${canvas.style.background || '#111'};`;
+  const s = SHAPES[frameShape];
+  const fgap = frameThickness + 'px';
+  const fpad = frameThickness > 0 ? frameThickness + 'px' : '0px';
+  offscreen.style.cssText = `position:fixed;left:-9999px;top:0;width:${W}px;height:${H}px;display:grid;gap:${fgap};padding:${fpad};background:#ffffff;border-radius:${s.outerR};overflow:hidden;`;
   offscreen.style.gridTemplateColumns = MODES[currentMode].grid.cols;
   offscreen.style.gridTemplateRows    = MODES[currentMode].grid.rows;
   if (MODES[currentMode].grid.areas) offscreen.style.gridTemplateAreas = MODES[currentMode].grid.areas;
 
   for (let i = 0; i < m.count; i++) {
     const slot = document.createElement('div');
-    slot.style.cssText = 'position:relative;overflow:hidden;min-height:0;min-width:0;';
+    slot.style.cssText = `position:relative;overflow:hidden;min-height:0;min-width:0;border-radius:${s.cellR};clip-path:${s.clip||''};`;
     if (currentMode === 'p5') slot.style.gridArea = AREA_NAMES[i];
 
     if (photos[i]) {
