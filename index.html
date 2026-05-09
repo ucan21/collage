@@ -68,10 +68,10 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 /* ── FRAME PANEL ── */
 .frame-panel{
   padding:0 14px 8px;flex-shrink:0;
-  display:flex;flex-direction:column;gap:8px;
+  display:flex;flex-direction:column;gap:7px;
 }
 .frame-row{display:flex;align-items:center;gap:10px}
-.frame-label{font-size:10px;font-weight:700;color:var(--text2);letter-spacing:.5px;min-width:38px}
+.frame-label{font-size:10px;font-weight:700;color:var(--text2);letter-spacing:.5px;min-width:38px;flex-shrink:0}
 .thickness-slider{
   flex:1;-webkit-appearance:none;appearance:none;
   height:4px;border-radius:2px;background:var(--border2);outline:none;cursor:pointer;
@@ -80,23 +80,42 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
   background:var(--accent);cursor:pointer;box-shadow:0 0 4px rgba(0,0,0,.4);
 }
-.thickness-val{
-  font-size:11px;font-weight:700;color:var(--accent);
-  min-width:26px;text-align:right;
-}
-.shape-row{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
+.thickness-val{font-size:11px;font-weight:700;color:var(--accent);min-width:26px;text-align:right}
+
+/* Shape scroll row */
+.shape-scroll{display:flex;gap:5px;overflow-x:auto;padding-bottom:3px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.shape-scroll::-webkit-scrollbar{display:none}
 .shape-btn{
-  flex-shrink:0;
-  width:44px;height:36px;
+  flex-shrink:0;width:42px;height:34px;
   border:1.5px solid var(--border2);border-radius:8px;
   background:var(--surface);cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  -webkit-appearance:none;transition:all .15s;
-  padding:0;
+  -webkit-appearance:none;transition:all .15s;padding:0;
 }
-.shape-btn.active{border-color:var(--accent);background:var(--accent-dim);}
-.shape-btn:active{transform:scale(.92);}
-.shape-btn svg{width:28px;height:22px;display:block;}
+.shape-btn.active{border-color:var(--accent);background:var(--accent-dim)}
+.shape-btn:active{transform:scale(.92)}
+.shape-btn svg{width:30px;height:24px;display:block}
+
+/* Color row */
+.color-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:3px;-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:center}
+.color-scroll::-webkit-scrollbar{display:none}
+.color-swatch{
+  flex-shrink:0;width:28px;height:28px;border-radius:50%;
+  border:2px solid transparent;cursor:pointer;transition:all .15s;
+  -webkit-appearance:none;
+}
+.color-swatch.active{border-color:var(--accent);transform:scale(1.2)}
+.color-swatch:active{transform:scale(.9)}
+/* Custom color picker button */
+.color-custom{
+  flex-shrink:0;width:28px;height:28px;border-radius:50%;
+  border:2px solid var(--border2);cursor:pointer;
+  background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);
+  position:relative;overflow:hidden;
+}
+.color-custom input[type=color]{
+  position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;
+}
 
 
 .canvas-wrap{
@@ -274,45 +293,92 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 
   <!-- Frame control panel -->
   <div class="frame-panel">
+    <!-- 두께 슬라이더 -->
     <div class="frame-row">
       <span class="frame-label">두께</span>
-      <input class="thickness-slider" type="range" min="0" max="20" value="3" id="thickSlider" oninput="setThickness(this.value)">
+      <input class="thickness-slider" type="range" min="0" max="24" value="3" id="thickSlider" oninput="setThickness(this.value)">
       <span class="thickness-val" id="thickVal">3</span>
     </div>
+
+    <!-- 모양 선택 (12종, 가로 스크롤) -->
     <div class="frame-row">
       <span class="frame-label">모양</span>
-      <div class="shape-row" id="shapeRow">
-        <!-- 직선(기본) -->
+      <div class="shape-scroll" id="shapeRow">
+        <!-- 직선 -->
         <button class="shape-btn active" data-shape="sharp" onclick="setShape('sharp')" title="직선">
-          <svg viewBox="0 0 28 22" fill="none"><rect x="1" y="1" width="11" height="20" fill="#888" rx="0"/><rect x="16" y="1" width="11" height="20" fill="#888" rx="0"/></svg>
+          <svg viewBox="0 0 30 24"><rect x="1" y="2" width="12" height="20" fill="#aaa" rx="0"/><rect x="17" y="2" width="12" height="20" fill="#aaa" rx="0"/></svg>
         </button>
-        <!-- 약한 라운드 -->
-        <button class="shape-btn" data-shape="soft" onclick="setShape('soft')" title="부드러운">
-          <svg viewBox="0 0 28 22" fill="none"><rect x="1" y="1" width="11" height="20" fill="#888" rx="3"/><rect x="16" y="1" width="11" height="20" fill="#888" rx="3"/></svg>
+        <!-- 소프트 -->
+        <button class="shape-btn" data-shape="soft" onclick="setShape('soft')" title="소프트">
+          <svg viewBox="0 0 30 24"><rect x="1" y="2" width="12" height="20" fill="#aaa" rx="4"/><rect x="17" y="2" width="12" height="20" fill="#aaa" rx="4"/></svg>
         </button>
-        <!-- 강한 라운드 -->
+        <!-- 라운드 -->
         <button class="shape-btn" data-shape="round" onclick="setShape('round')" title="라운드">
-          <svg viewBox="0 0 28 22" fill="none"><rect x="1" y="1" width="11" height="20" fill="#888" rx="6"/><rect x="16" y="1" width="11" height="20" fill="#888" rx="6"/></svg>
+          <svg viewBox="0 0 30 24"><rect x="1" y="2" width="12" height="20" fill="#aaa" rx="8"/><rect x="17" y="2" width="12" height="20" fill="#aaa" rx="8"/></svg>
         </button>
         <!-- 원형 -->
         <button class="shape-btn" data-shape="circle" onclick="setShape('circle')" title="원형">
-          <svg viewBox="0 0 28 22" fill="none"><ellipse cx="7" cy="11" rx="6" ry="9" fill="#888"/><ellipse cx="21" cy="11" rx="6" ry="9" fill="#888"/></svg>
+          <svg viewBox="0 0 30 24"><ellipse cx="7.5" cy="12" rx="6.5" ry="10" fill="#aaa"/><ellipse cx="22.5" cy="12" rx="6.5" ry="10" fill="#aaa"/></svg>
         </button>
-        <!-- 다이아몬드(클리핑) -->
+        <!-- 다이아몬드 -->
         <button class="shape-btn" data-shape="diamond" onclick="setShape('diamond')" title="다이아몬드">
-          <svg viewBox="0 0 28 22" fill="none"><polygon points="6,1 11,11 6,21 1,11" fill="#888"/><polygon points="22,1 27,11 22,21 17,11" fill="#888"/></svg>
+          <svg viewBox="0 0 30 24"><polygon points="7,2 13,12 7,22 1,12" fill="#aaa"/><polygon points="23,2 29,12 23,22 17,12" fill="#aaa"/></svg>
         </button>
-        <!-- 별(부드러운 별) -->
-        <button class="shape-btn" data-shape="star" onclick="setShape('star')" title="별모양 틀">
-          <svg viewBox="0 0 28 22" fill="none">
-            <polygon points="6,1 7.5,7 13,7 8.5,11 10.5,17 6,13.5 1.5,17 3.5,11 -1,7 4.5,7" fill="#888"/>
-            <polygon points="22,1 23.5,7 29,7 24.5,11 26.5,17 22,13.5 17.5,17 19.5,11 15,7 20.5,7" fill="#888"/>
-          </svg>
+        <!-- 아치 -->
+        <button class="shape-btn" data-shape="arch" onclick="setShape('arch')" title="아치">
+          <svg viewBox="0 0 30 24"><path d="M1,22 L1,10 Q7,2 13,10 L13,22 Z" fill="#aaa"/><path d="M17,22 L17,10 Q23,2 29,10 L29,22 Z" fill="#aaa"/></svg>
+        </button>
+        <!-- 물방울 -->
+        <button class="shape-btn" data-shape="drop" onclick="setShape('drop')" title="물방울">
+          <svg viewBox="0 0 30 24"><path d="M7,22 Q1,16 1,10 Q1,2 7,2 Q13,2 13,10 Q13,16 7,22Z" fill="#aaa"/><path d="M23,22 Q17,16 17,10 Q17,2 23,2 Q29,2 29,10 Q29,16 23,22Z" fill="#aaa"/></svg>
         </button>
         <!-- 육각형 -->
         <button class="shape-btn" data-shape="hex" onclick="setShape('hex')" title="육각형">
-          <svg viewBox="0 0 28 22" fill="none"><polygon points="6,1 11,4 11,18 6,21 1,18 1,4" fill="#888"/><polygon points="22,1 27,4 27,18 22,21 17,18 17,4" fill="#888"/></svg>
+          <svg viewBox="0 0 30 24"><polygon points="7,2 13,5.5 13,18.5 7,22 1,18.5 1,5.5" fill="#aaa"/><polygon points="23,2 29,5.5 29,18.5 23,22 17,18.5 17,5.5" fill="#aaa"/></svg>
         </button>
+        <!-- 별 -->
+        <button class="shape-btn" data-shape="star" onclick="setShape('star')" title="별">
+          <svg viewBox="0 0 30 24"><polygon points="7,2 8.5,8 14,8 9.5,12 11,18 7,14.5 3,18 4.5,12 0,8 5.5,8" fill="#aaa"/><polygon points="23,2 24.5,8 30,8 25.5,12 27,18 23,14.5 19,18 20.5,12 16,8 21.5,8" fill="#aaa"/></svg>
+        </button>
+        <!-- 하트 -->
+        <button class="shape-btn" data-shape="heart" onclick="setShape('heart')" title="하트">
+          <svg viewBox="0 0 30 24"><path d="M7,20 Q0,14 1,8 Q2,2 7,4 Q12,2 13,8 Q14,14 7,20Z" fill="#aaa"/><path d="M23,20 Q16,14 17,8 Q18,2 23,4 Q28,2 29,8 Q30,14 23,20Z" fill="#aaa"/></svg>
+        </button>
+        <!-- 방패 -->
+        <button class="shape-btn" data-shape="shield" onclick="setShape('shield')" title="방패">
+          <svg viewBox="0 0 30 24"><path d="M7,2 L13,4 L13,14 Q13,20 7,22 Q1,20 1,14 L1,4Z" fill="#aaa"/><path d="M23,2 L29,4 L29,14 Q29,20 23,22 Q17,20 17,14 L17,4Z" fill="#aaa"/></svg>
+        </button>
+        <!-- 깃발 -->
+        <button class="shape-btn" data-shape="flag" onclick="setShape('flag')" title="깃발">
+          <svg viewBox="0 0 30 24"><polygon points="1,2 13,2 10,12 13,22 1,22" fill="#aaa"/><polygon points="17,2 29,2 26,12 29,22 17,22" fill="#aaa"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 컬러 선택 -->
+    <div class="frame-row">
+      <span class="frame-label">컬러</span>
+      <div class="color-scroll" id="colorRow">
+        <button class="color-swatch active" data-color="#ffffff" style="background:#ffffff" onclick="setFrameColor('#ffffff')" title="흰색"></button>
+        <button class="color-swatch" data-color="#000000" style="background:#000000" onclick="setFrameColor('#000000')" title="검정"></button>
+        <button class="color-swatch" data-color="#e8c96d" style="background:#e8c96d" onclick="setFrameColor('#e8c96d')" title="골드"></button>
+        <button class="color-swatch" data-color="#c0a060" style="background:linear-gradient(135deg,#f5e6c0,#c0a060,#8b6914)" onclick="setFrameColor('linear-gradient(135deg,#f5e6c0,#c0a060,#8b6914)')" title="골드 그라디언트"></button>
+        <button class="color-swatch" data-color="#e8e8e8" style="background:linear-gradient(135deg,#ffffff,#c8c8c8,#a0a0a0)" onclick="setFrameColor('linear-gradient(135deg,#ffffff,#c8c8c8,#a0a0a0)')" title="실버 그라디언트"></button>
+        <button class="color-swatch" data-color="#ff6b9d" style="background:#ff6b9d" onclick="setFrameColor('#ff6b9d')" title="핑크"></button>
+        <button class="color-swatch" data-color="#ff4444" style="background:#ff4444" onclick="setFrameColor('#ff4444')" title="빨강"></button>
+        <button class="color-swatch" data-color="#ff9500" style="background:#ff9500" onclick="setFrameColor('#ff9500')" title="오렌지"></button>
+        <button class="color-swatch" data-color="#ffdd00" style="background:#ffdd00" onclick="setFrameColor('#ffdd00')" title="노랑"></button>
+        <button class="color-swatch" data-color="#4cd964" style="background:#4cd964" onclick="setFrameColor('#4cd964')" title="초록"></button>
+        <button class="color-swatch" data-color="#007aff" style="background:#007aff" onclick="setFrameColor('#007aff')" title="파랑"></button>
+        <button class="color-swatch" data-color="#5856d6" style="background:#5856d6" onclick="setFrameColor('#5856d6')" title="보라"></button>
+        <button class="color-swatch" data-color="#ff2d55" style="background:linear-gradient(135deg,#ff6b9d,#ff2d55,#c0392b)" onclick="setFrameColor('linear-gradient(135deg,#ff6b9d,#ff2d55,#c0392b)')" title="핑크-레드 그라디언트"></button>
+        <button class="color-swatch" data-color="#007aff-grad" style="background:linear-gradient(135deg,#a8edea,#007aff,#5856d6)" onclick="setFrameColor('linear-gradient(135deg,#a8edea,#007aff,#5856d6)')" title="블루 그라디언트"></button>
+        <button class="color-swatch" data-color="#sunrise" style="background:linear-gradient(135deg,#f7971e,#ffd200)" onclick="setFrameColor('linear-gradient(135deg,#f7971e,#ffd200)')" title="선라이즈"></button>
+        <button class="color-swatch" data-color="#mint" style="background:linear-gradient(135deg,#43e97b,#38f9d7)" onclick="setFrameColor('linear-gradient(135deg,#43e97b,#38f9d7)')" title="민트"></button>
+        <!-- 직접 색상 선택 -->
+        <div class="color-custom" title="직접 선택">
+          <input type="color" id="customColor" value="#ffffff" oninput="setFrameColor(this.value);updateCustomSwatch(this.value)">
+        </div>
       </div>
     </div>
   </div>
@@ -385,30 +451,33 @@ const bgLabels = ['검정','흰색','다크블루','다크레드','다크그린'
 // ── FRAME STATE ──
 let frameThickness = 3;
 let frameShape = 'sharp';
+let frameColor = '#ffffff';
 
-// Shape definitions: outer-radius, cell-radius, padding, clip-path for cell
+// Shape definitions
 const SHAPES = {
-  sharp:   { outerR:'12px', cellR:'0px',  pad:'0px',  clip:'' },
-  soft:    { outerR:'14px', cellR:'6px',  pad:'0px',  clip:'' },
-  round:   { outerR:'20px', cellR:'14px', pad:'0px',  clip:'' },
-  circle:  { outerR:'24px', cellR:'50%',  pad:'0px',  clip:'' },
-  diamond: { outerR:'4px',  cellR:'0px',  pad:'0px',  clip:'polygon(50% 0%,100% 50%,50% 100%,0% 50%)' },
-  star:    { outerR:'4px',  cellR:'0px',  pad:'0px',  clip:'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)' },
-  hex:     { outerR:'4px',  cellR:'0px',  pad:'0px',  clip:'polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)' },
+  sharp:   { outerR:'12px', cellR:'0px',  clip:'' },
+  soft:    { outerR:'16px', cellR:'8px',  clip:'' },
+  round:   { outerR:'24px', cellR:'18px', clip:'' },
+  circle:  { outerR:'28px', cellR:'50%',  clip:'' },
+  diamond: { outerR:'4px',  cellR:'0px',  clip:'polygon(50% 0%,100% 50%,50% 100%,0% 50%)' },
+  arch:    { outerR:'4px',  cellR:'0px',  clip:'polygon(0% 100%,0% 40%,10% 20%,30% 5%,50% 0%,70% 5%,90% 20%,100% 40%,100% 100%)' },
+  drop:    { outerR:'4px',  cellR:'0px',  clip:'polygon(50% 0%,80% 10%,100% 35%,100% 70%,80% 90%,50% 100%,20% 90%,0% 70%,0% 35%,20% 10%)' },
+  hex:     { outerR:'4px',  cellR:'0px',  clip:'polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)' },
+  star:    { outerR:'4px',  cellR:'0px',  clip:'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)' },
+  heart:   { outerR:'4px',  cellR:'0px',  clip:'polygon(50% 30%,62% 15%,75% 10%,88% 15%,95% 28%,95% 42%,80% 60%,65% 75%,50% 88%,35% 75%,20% 60%,5% 42%,5% 28%,12% 15%,25% 10%,38% 15%)' },
+  shield:  { outerR:'4px',  cellR:'0px',  clip:'polygon(15% 0%,85% 0%,100% 15%,100% 55%,50% 100%,0% 55%,0% 15%)' },
+  flag:    { outerR:'4px',  cellR:'0px',  clip:'polygon(0% 0%,100% 0%,85% 50%,100% 100%,0% 100%)' },
 };
 
 function applyFrame() {
   const s = SHAPES[frameShape];
   const gap = frameThickness + 'px';
   const pad = frameThickness > 0 ? frameThickness + 'px' : '0px';
-  const c = canvas;
-  c.style.setProperty('--frame-gap', gap);
-  c.style.setProperty('--frame-color', '#ffffff');
-  c.style.setProperty('--frame-outer-radius', s.outerR);
-  c.style.setProperty('--frame-padding', pad);
-  c.style.setProperty('--frame-cell-radius', s.cellR);
-
-  // Apply clip-path to all cells
+  canvas.style.setProperty('--frame-gap', gap);
+  canvas.style.background = frameColor;
+  canvas.style.setProperty('--frame-outer-radius', s.outerR);
+  canvas.style.setProperty('--frame-padding', pad);
+  canvas.style.setProperty('--frame-cell-radius', s.cellR);
   canvas.querySelectorAll('.cell').forEach(cell => {
     cell.style.clipPath = s.clip || '';
     cell.style.borderRadius = s.cellR;
@@ -424,6 +493,18 @@ function setThickness(val) {
 function setShape(shape) {
   frameShape = shape;
   document.querySelectorAll('.shape-btn').forEach(b => b.classList.toggle('active', b.dataset.shape === shape));
+  applyFrame();
+}
+
+function setFrameColor(color) {
+  frameColor = color;
+  document.querySelectorAll('.color-swatch').forEach(b => b.classList.toggle('active', b.dataset.color === color));
+  applyFrame();
+}
+
+function updateCustomSwatch(hex) {
+  frameColor = hex;
+  document.querySelectorAll('.color-swatch').forEach(b => b.classList.remove('active'));
   applyFrame();
 }
 
@@ -720,10 +801,11 @@ function setBg() {
 function resetAll() {
   if (!confirm('모든 사진을 초기화할까요?')) return;
   captionMode = false; dragMode = false; bgIdx = 0;
-  frameThickness = 3; frameShape = 'sharp';
+  frameThickness = 3; frameShape = 'sharp'; frameColor = '#ffffff';
   document.getElementById('thickSlider').value = 3;
   document.getElementById('thickVal').textContent = '3';
   document.querySelectorAll('.shape-btn').forEach(b => b.classList.toggle('active', b.dataset.shape === 'sharp'));
+  document.querySelectorAll('.color-swatch').forEach(b => b.classList.toggle('active', b.dataset.color === '#ffffff'));
   canvas.style.background = '';
   document.getElementById('btnDrag').classList.remove('active-mode');
   buildGrid();
@@ -742,7 +824,7 @@ async function saveCollage() {
   const s = SHAPES[frameShape];
   const fgap = frameThickness + 'px';
   const fpad = frameThickness > 0 ? frameThickness + 'px' : '0px';
-  offscreen.style.cssText = `position:fixed;left:-9999px;top:0;width:${W}px;height:${H}px;display:grid;gap:${fgap};padding:${fpad};background:#ffffff;border-radius:${s.outerR};overflow:hidden;`;
+  offscreen.style.cssText = `position:fixed;left:-9999px;top:0;width:${W}px;height:${H}px;display:grid;gap:${fgap};padding:${fpad};background:${frameColor};border-radius:${s.outerR};overflow:hidden;`;
   offscreen.style.gridTemplateColumns = MODES[currentMode].grid.cols;
   offscreen.style.gridTemplateRows    = MODES[currentMode].grid.rows;
   if (MODES[currentMode].grid.areas) offscreen.style.gridTemplateAreas = MODES[currentMode].grid.areas;
